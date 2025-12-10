@@ -66,6 +66,16 @@ app.get('/health', (req, res) => {
 const webhookRoutes = require('./routes/webhooks');
 app.use('/api/webhooks', webhookRoutes);
 
+// TODO: Add other routes
+// const deviceRoutes = require('./routes/devices');
+// app.use('/api/inreach/devices', deviceRoutes);
+// 
+// const rentalRoutes = require('./routes/rentals');
+// app.use('/api/inreach/rentals', rentalRoutes);
+// 
+// const userRoutes = require('./routes/users');
+// app.use('/api/inreach/users', userRoutes);
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({

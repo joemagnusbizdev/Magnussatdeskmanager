@@ -1,8 +1,5 @@
-# Create or update .gitignore
-@"
-node_modules/
+﻿node_modules/
 package-lock.json
 *.log
 .env
 .DS_Store
-"@ | Out-File -FilePath .gitignore -Encoding utf8
