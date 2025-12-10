@@ -7,7 +7,7 @@ import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'ax
 import { toast } from 'sonner@2.0.3';
 
 // API Configuration
-const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || 'https://magnus-garmin-ecc.onrender.com';
+const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || 'https://magnussatdeskmanager.onrender.com';
 const API_KEY = import.meta.env?.VITE_API_KEY || '';
 
 // ============================================
