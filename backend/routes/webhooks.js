@@ -16,7 +16,7 @@ let orders = [];
  */
 
 
-ffunction verifyWebhookSignature(rawBody, signature) {
+function verifyWebhookSignature(rawBody, signature) {
   const secret = process.env.WORDPRESS_WEBHOOK_SECRET;
   
   if (!secret) {
@@ -51,7 +51,13 @@ router.post('/woocommerce-order', async (req, res) => {
     });
     
     // Verify signature using raw body
-    if (!verifyWebhookSignature(rawBody, signature)) {  // ← Use rawBody
+    if (!verifyWebhookSignature(rawBody, signature)) {
+      console.error('[Webhook] Invalid signature!');
+      return res.status(401).json({
+        error: 'Invalid webhook signature',
+        message: 'Webhook authentication failed'
+      });
+    }
     
     // Verify timestamp (prevent replay attacks)
     const now = Math.floor(Date.now() / 1000);
@@ -65,6 +71,8 @@ router.post('/woocommerce-order', async (req, res) => {
         message: 'Webhook timestamp is too old (replay attack prevention)'
       });
     }
+    
+    // Rest of your code continues...
     
     // Transform WordPress payload to internal format
     const order = {

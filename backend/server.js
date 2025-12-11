@@ -4,28 +4,12 @@
  */
 
 const express = require('express');
-const app = express();
-
-// CRITICAL: Capture raw body for signature verification
-app.use('/api/webhooks', express.json({
-  verify: (req, res, buf) => {
-    req.rawBody = buf.toString();
-  }
-}));
-
-// Other routes
-app.use(express.json()); // For non-webhook routes
-
-// Your routes
-const webhookRoutes = require('./routes/webhooks');
-app.use('/api/webhooks', webhookRoutes);
-
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
 
-const app = express();
+const app = express();  // ← Declare ONCE
 const PORT = process.env.PORT || 3001;
 
 // ============================================
@@ -40,14 +24,21 @@ const corsOptions = {
   origin: [
     'http://localhost:3000', // Local development
     'https://sat.magnus.co.il', // Production frontend
-    // Add your frontend domains here
   ],
   credentials: true,
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
 
-// Body parsers
+// CRITICAL: Capture raw body for webhook signature verification
+// This MUST come BEFORE other body parsers for webhook routes
+app.use('/api/webhooks', express.json({
+  verify: (req, res, buf) => {
+    req.rawBody = buf.toString();
+  }
+}));
+
+// Body parsers for other routes
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -78,19 +69,13 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Webhook routes
+// Webhook routes (declared ONCE)
 const webhookRoutes = require('./routes/webhooks');
 app.use('/api/webhooks', webhookRoutes);
 
 // TODO: Add other routes
 // const deviceRoutes = require('./routes/devices');
 // app.use('/api/inreach/devices', deviceRoutes);
-// 
-// const rentalRoutes = require('./routes/rentals');
-// app.use('/api/inreach/rentals', rentalRoutes);
-// 
-// const userRoutes = require('./routes/users');
-// app.use('/api/inreach/users', userRoutes);
 
 // 404 handler
 app.use((req, res) => {
