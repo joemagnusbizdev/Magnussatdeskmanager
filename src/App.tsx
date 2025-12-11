@@ -28,6 +28,8 @@ import Calendar from '@/pages/Calendar';
 import Users from '@/pages/Users';
 import Sales from '@/pages/Sales';
 import NewSale from '@/pages/NewSale';
+import CustomerServiceDashboard from '@/pages/CustomerServiceDashboard';
+import RentalIntake from '@/pages/RentalIntake';
 import NotFound from '@/pages/NotFound';
 import { Toaster } from '@/components/ui/sonner';
 
@@ -150,6 +152,8 @@ export default function App() {
         <Route path="/users" element={<Users />} />
         <Route path="/sales" element={<Sales />} />
         <Route path="/sales/new" element={<NewSale />} />
+        <Route path="/cs-dashboard" element={<CustomerServiceDashboard />} />
+        <Route path="/rental-intake" element={<RentalIntake />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
