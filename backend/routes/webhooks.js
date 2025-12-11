@@ -14,7 +14,9 @@ let orders = [];
 /**
  * Verify webhook signature from WordPress
  */
-function verifyWebhookSignature(payload, signature) {
+
+
+ffunction verifyWebhookSignature(rawBody, signature) {
   const secret = process.env.WORDPRESS_WEBHOOK_SECRET;
   
   if (!secret) {
@@ -24,11 +26,12 @@ function verifyWebhookSignature(payload, signature) {
   
   const expectedSignature = crypto
     .createHmac('sha256', secret)
-    .update(JSON.stringify(payload))
+    .update(rawBody)  // ← Use raw body string
     .digest('hex');
   
   return signature === expectedSignature;
 }
+
 
 /**
  * POST /api/webhooks/woocommerce-order
@@ -38,6 +41,7 @@ router.post('/woocommerce-order', async (req, res) => {
   try {
     const signature = req.headers['x-webhook-signature'];
     const timestamp = req.headers['x-webhook-timestamp'];
+    const rawBody = req.rawBody || JSON.stringify(req.body); // Fallback
     const payload = req.body;
     
     console.log('[Webhook] Received WooCommerce order:', {
@@ -46,14 +50,8 @@ router.post('/woocommerce-order', async (req, res) => {
       timestamp,
     });
     
-    // Verify signature
-    if (!verifyWebhookSignature(payload, signature)) {
-      console.error('[Webhook] Invalid signature!');
-      return res.status(401).json({
-        error: 'Invalid webhook signature',
-        message: 'Webhook authentication failed'
-      });
-    }
+    // Verify signature using raw body
+    if (!verifyWebhookSignature(rawBody, signature)) {  // ← Use rawBody
     
     // Verify timestamp (prevent replay attacks)
     const now = Math.floor(Date.now() / 1000);

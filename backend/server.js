@@ -4,6 +4,22 @@
  */
 
 const express = require('express');
+const app = express();
+
+// CRITICAL: Capture raw body for signature verification
+app.use('/api/webhooks', express.json({
+  verify: (req, res, buf) => {
+    req.rawBody = buf.toString();
+  }
+}));
+
+// Other routes
+app.use(express.json()); // For non-webhook routes
+
+// Your routes
+const webhookRoutes = require('./routes/webhooks');
+app.use('/api/webhooks', webhookRoutes);
+
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
