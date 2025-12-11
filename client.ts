@@ -2,7 +2,7 @@
  * API Client Configuration
  * Handles communication with Magnus Garmin ECC Backend
  * 
- * COMPLETE VERSION - All exports included
+ * FIXED: Corrected API base URL and endpoints
  */
 
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
@@ -195,24 +195,6 @@ export const getApiStats = async () => {
   } catch (error) {
     console.error('[API] Failed to get stats', error);
     throw error;
-  }
-};
-
-/**
- * Check if feature is enabled
- * NOTE: This function exists for compatibility but may not work with current backend
- */
-export const checkFeatureFlag = async (flagName: string): Promise<boolean> => {
-  try {
-    // Try to check feature flag from backend
-    const response = await apiClient.get('/api/admin/features');
-    const features = response.data.features || [];
-    const feature = features.find((f: any) => f.name === flagName);
-    return feature?.enabled || false;
-  } catch (error) {
-    // If endpoint doesn't exist, log warning and return false
-    console.warn(`[API] Feature flag check failed for: ${flagName}. Defaulting to false.`, error);
-    return false;
   }
 };
 

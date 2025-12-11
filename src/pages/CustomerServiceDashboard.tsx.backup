@@ -1,6 +1,6 @@
 /**
- * Customer Service Dashboard - LIVE VERSION
- * FIXED: Now fetches real data from backend
+ * Customer Service Dashboard
+ * Streamlined interface for CS reps - guides them through daily tasks
  */
 
 import { useState, useEffect } from 'react';
@@ -12,8 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { WebsiteOrdersAlert } from '@/components/dashboard/WebsiteOrdersAlert';
-import { listOrders, getOrderStats, type Order, type OrderStats } from '@/services/api/orders';
-import { toast } from 'sonner';
 import {
   CheckCircle2,
   Clock,
@@ -24,6 +22,7 @@ import {
   Building2,
   Users,
   Calendar,
+  PackageCheck,
   AlertTriangle,
   TrendingUp,
   Smartphone,
@@ -44,157 +43,87 @@ interface Task {
 export default function CustomerServiceDashboard() {
   const navigate = useNavigate();
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [stats, setStats] = useState<OrderStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Fetch real data from backend
+  // Simulate loading tasks
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        console.log('🔄 Fetching dashboard data...');
-
-        // Fetch orders and stats in parallel
-        const [ordersData, statsData] = await Promise.all([
-          listOrders(),
-          getOrderStats(),
-        ]);
-
-        console.log('✅ Dashboard data loaded:', {
-          orders: ordersData.length,
-          stats: statsData,
-        });
-
-        setOrders(ordersData);
-        setStats(statsData);
-
-        // Generate tasks from real orders
-        const generatedTasks = generateTasksFromOrders(ordersData, statsData);
-        setTasks(generatedTasks);
-
-        toast.success('Dashboard loaded', {
-          description: `${ordersData.length} orders found`,
-        });
-      } catch (err) {
-        console.error('❌ Failed to load dashboard:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load data');
-        toast.error('Failed to load dashboard', {
-          description: 'Using offline mode',
-        });
-        
-        // Show empty state instead of mock data
-        setTasks([]);
-        setOrders([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    // TODO: Replace with real API call
+    setTimeout(() => {
+      setTasks([
+        {
+          id: '1',
+          title: 'Process Website Orders',
+          description: '3 new orders waiting for device assignment',
+          type: 'urgent',
+          action: '/orders?filter=pending',
+          count: 3,
+          priority: 'high'
+        },
+        {
+          id: '2',
+          title: 'Activations Today',
+          description: '5 rentals start today - devices need activation',
+          type: 'today',
+          action: '/activations/today',
+          count: 5,
+          dueDate: new Date().toISOString(),
+          priority: 'high'
+        },
+        {
+          id: '3',
+          title: 'Returns Due Today',
+          description: '2 devices scheduled for return',
+          type: 'today',
+          action: '/returns/today',
+          count: 2,
+          dueDate: new Date().toISOString(),
+          priority: 'medium'
+        },
+        {
+          id: '4',
+          title: 'Overdue Rentals',
+          description: '1 rental is overdue - contact customer',
+          type: 'urgent',
+          action: '/rentals?filter=overdue',
+          count: 1,
+          priority: 'high'
+        },
+        {
+          id: '5',
+          title: 'Low Inventory Alert',
+          description: 'SatDesk #2 has only 3 available devices',
+          type: 'today',
+          action: '/inventory',
+          count: 3,
+          priority: 'medium'
+        },
+        {
+          id: '6',
+          title: 'Upcoming Activations',
+          description: '8 rentals start tomorrow',
+          type: 'upcoming',
+          action: '/activations/upcoming',
+          count: 8,
+          dueDate: new Date(Date.now() + 86400000).toISOString(),
+          priority: 'low'
+        },
+      ]);
+      setLoading(false);
+    }, 500);
   }, []);
-
-  // Generate tasks from real orders
-  const generateTasksFromOrders = (orders: Order[], stats: OrderStats): Task[] => {
-    const tasks: Task[] = [];
-
-    // Urgent: New orders waiting for processing
-    if (stats.new > 0) {
-      tasks.push({
-        id: 'urgent-new-orders',
-        title: 'Process New Orders',
-        description: `${stats.new} new orders waiting for device assignment`,
-        type: 'urgent',
-        action: '/orders?filter=new',
-        count: stats.new,
-        priority: 'high',
-      });
-    }
-
-    // Today: Recent orders (last 24 hours)
-    if (stats.last24Hours > 0) {
-      tasks.push({
-        id: 'today-recent',
-        title: 'Recent Orders',
-        description: `${stats.last24Hours} orders received in the last 24 hours`,
-        type: 'today',
-        action: '/orders?filter=recent',
-        count: stats.last24Hours,
-        dueDate: new Date().toISOString(),
-        priority: 'high',
-      });
-    }
-
-    // Processing orders
-    if (stats.processing > 0) {
-      tasks.push({
-        id: 'today-processing',
-        title: 'Orders in Progress',
-        description: `${stats.processing} orders currently being processed`,
-        type: 'today',
-        action: '/orders?filter=processing',
-        count: stats.processing,
-        priority: 'medium',
-      });
-    }
-
-    // Upcoming: This week's orders
-    if (stats.last7Days > 0) {
-      tasks.push({
-        id: 'upcoming-week',
-        title: 'This Week\'s Orders',
-        description: `${stats.last7Days} orders this week`,
-        type: 'upcoming',
-        action: '/orders?filter=week',
-        count: stats.last7Days,
-        priority: 'low',
-      });
-    }
-
-    return tasks;
-  };
 
   const urgentTasks = tasks.filter(t => t.type === 'urgent');
   const todayTasks = tasks.filter(t => t.type === 'today');
   const upcomingTasks = tasks.filter(t => t.type === 'upcoming');
 
-  // Calculate completion percentage
-  const completionPercentage = stats
-    ? Math.round(((stats.completed + stats.cancelled) / Math.max(stats.total, 1)) * 100)
-    : 0;
+  const completionPercentage = 35; // TODO: Calculate based on completed tasks
 
   if (loading) {
     return (
       <AppLayout>
-        <div className="flex flex-col items-center justify-center h-96 gap-4">
+        <div className="flex items-center justify-center h-96">
           <RefreshCw className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading dashboard...</p>
         </div>
-      </AppLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <AppLayout>
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Connection Error</AlertTitle>
-          <AlertDescription>
-            {error}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="ml-4"
-              onClick={() => window.location.reload()}
-            >
-              Retry
-            </Button>
-          </AlertDescription>
-        </Alert>
       </AppLayout>
     );
   }
@@ -207,14 +136,11 @@ export default function CustomerServiceDashboard() {
           <div>
             <h1 className="text-3xl font-bold">Good Morning! 👋</h1>
             <p className="text-muted-foreground mt-1">
-              {orders.length > 0 
-                ? `You have ${orders.length} orders to manage`
-                : "No orders yet - everything's quiet!"
-              }
+              Here's what needs your attention today
             </p>
           </div>
           <div className="text-right">
-            <div className="text-sm text-muted-foreground">Processing Rate</div>
+            <div className="text-sm text-muted-foreground">Today's Progress</div>
             <div className="flex items-center gap-2 mt-1">
               <Progress value={completionPercentage} className="w-32" />
               <span className="text-sm font-semibold">{completionPercentage}%</span>
@@ -222,61 +148,52 @@ export default function CustomerServiceDashboard() {
           </div>
         </div>
 
-        {/* Connection Status */}
-        <Alert className="bg-green-50 border-green-200">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertTitle className="text-green-900">Backend Connected</AlertTitle>
-          <AlertDescription className="text-green-700">
-            Showing live data from magnussatdeskmanager.onrender.com
-          </AlertDescription>
-        </Alert>
-
-        {/* Website Orders Alert */}
+        {/* Website Orders Alert - NEW! */}
         <WebsiteOrdersAlert maxDisplay={5} showOnlyNew={true} />
 
-        {/* Quick Stats - LIVE DATA */}
+        {/* Quick Stats */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">New Orders</CardTitle>
+              <CardTitle className="text-sm font-medium">Urgent Tasks</CardTitle>
               <AlertCircle className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats?.new || 0}</div>
-              <p className="text-xs text-muted-foreground">Needs processing</p>
+              <div className="text-2xl font-bold text-red-600">{urgentTasks.length}</div>
+              <p className="text-xs text-muted-foreground">Needs immediate attention</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">In Progress</CardTitle>
+              <CardTitle className="text-sm font-medium">Today's Tasks</CardTitle>
               <Clock className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-600">{stats?.processing || 0}</div>
-              <p className="text-xs text-muted-foreground">Being processed</p>
+              <div className="text-2xl font-bold text-orange-600">{todayTasks.length}</div>
+              <p className="text-xs text-muted-foreground">Due today</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completed</CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <CardTitle className="text-sm font-medium">Upcoming</CardTitle>
+              <Calendar className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats?.completed || 0}</div>
-              <p className="text-xs text-muted-foreground">Successfully processed</p>
+              <div className="text-2xl font-bold text-blue-600">{upcomingTasks.length}</div>
+              <p className="text-xs text-muted-foreground">Next few days</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-              <Smartphone className="h-4 w-4 text-blue-600" />
+              <CardTitle className="text-sm font-medium">Active Devices</CardTitle>
+              <Smartphone className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats?.total || 0}</div>
-              <p className="text-xs text-muted-foreground">All time</p>
+              <div className="text-2xl font-bold text-green-600">127</div>
+              <p className="text-xs text-muted-foreground">Currently rented</p>
             </CardContent>
           </Card>
         </div>
@@ -326,7 +243,7 @@ export default function CustomerServiceDashboard() {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-orange-600" />
-              <h2 className="text-xl font-bold">Today's Activity</h2>
+              <h2 className="text-xl font-bold">Today's Schedule</h2>
             </div>
             
             <div className="grid gap-4 sm:grid-cols-2">
@@ -375,22 +292,22 @@ export default function CustomerServiceDashboard() {
                     <ShoppingCart className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
-                    <CardTitle className="text-base">Process Order</CardTitle>
-                    <CardDescription>Website order</CardDescription>
+                    <CardTitle className="text-base">Process Website Order</CardTitle>
+                    <CardDescription>Quick activation</CardDescription>
                   </div>
                 </div>
               </CardHeader>
             </Card>
 
             <Card className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 border-2 hover:border-primary">
-              <CardHeader onClick={() => navigate('/orders')}>
+              <CardHeader onClick={() => navigate('/rental-intake?source=phone-individual')}>
                 <div className="flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100">
                     <Phone className="h-6 w-6 text-green-600" />
                   </div>
                   <div>
-                    <CardTitle className="text-base">View All Orders</CardTitle>
-                    <CardDescription>Order management</CardDescription>
+                    <CardTitle className="text-base">Phone Rental</CardTitle>
+                    <CardDescription>Individual customer</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -417,7 +334,7 @@ export default function CustomerServiceDashboard() {
                     <Users className="h-6 w-6 text-orange-600" />
                   </div>
                   <div>
-                    <CardTitle className="text-base">Bulk Order</CardTitle>
+                    <CardTitle className="text-base">B2B Bulk Order</CardTitle>
                     <CardDescription>Large order</CardDescription>
                   </div>
                 </div>
@@ -426,16 +343,51 @@ export default function CustomerServiceDashboard() {
           </div>
         </div>
 
-        {/* Empty State */}
-        {orders.length === 0 && !loading && (
-          <Alert>
-            <TrendingUp className="h-4 w-4" />
-            <AlertTitle>No Orders Yet</AlertTitle>
-            <AlertDescription>
-              Your dashboard will show real orders once they start coming in from magnus.co.il
-            </AlertDescription>
-          </Alert>
+        {/* Upcoming Tasks Preview */}
+        {upcomingTasks.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-blue-600" />
+                <h2 className="text-xl font-bold">Coming Up</h2>
+              </div>
+              <Button variant="ghost" size="sm">
+                View All
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="grid gap-3">
+              {upcomingTasks.slice(0, 3).map(task => (
+                <Card key={task.id} className="border-blue-100">
+                  <CardHeader className="py-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <CardTitle className="text-sm">{task.title}</CardTitle>
+                          <CardDescription className="text-xs">{task.description}</CardDescription>
+                        </div>
+                      </div>
+                      {task.count && (
+                        <Badge variant="outline">{task.count}</Badge>
+                      )}
+                    </div>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          </div>
         )}
+
+        {/* Help & Tips */}
+        <Alert>
+          <TrendingUp className="h-4 w-4" />
+          <AlertTitle>Tip of the Day</AlertTitle>
+          <AlertDescription>
+            Use bulk operations when processing multiple website orders at once - it saves time and reduces errors!
+          </AlertDescription>
+        </Alert>
       </div>
     </AppLayout>
   );

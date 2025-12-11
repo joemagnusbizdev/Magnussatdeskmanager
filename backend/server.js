@@ -1,4 +1,4 @@
-/**
+﻿/**
  * MAGNUS Backend Server
  * Main entry point for the backend API
  */
@@ -9,7 +9,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
 
-const app = express();  // ← Declare ONCE
+const app = express();
 const PORT = process.env.PORT || 3001;
 
 // ============================================
@@ -51,7 +51,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // Request logging
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  console.log('['+ new Date().toISOString() +'] '+ req.method +' '+ req.path);
   next();
 });
 
@@ -69,19 +69,19 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Webhook routes (declared ONCE)
+// Webhook routes
 const webhookRoutes = require('./routes/webhooks');
 app.use('/api/webhooks', webhookRoutes);
 
-// TODO: Add other routes
-// const deviceRoutes = require('./routes/devices');
-// app.use('/api/inreach/devices', deviceRoutes);
+// Device routes
+const deviceRoutes = require('./routes/devices');
+app.use(deviceRoutes);
 
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({
     error: 'Not Found',
-    message: `Cannot ${req.method} ${req.path}`,
+    message: 'Cannot '+ req.method +' '+ req.path,
     path: req.path,
   });
 });
@@ -89,7 +89,7 @@ app.use((req, res) => {
 // Error handler
 app.use((err, req, res, next) => {
   console.error('[Error]', err);
-  
+
   res.status(err.status || 500).json({
     error: err.message || 'Internal Server Error',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
@@ -104,11 +104,12 @@ app.listen(PORT, () => {
   console.log('='.repeat(50));
   console.log('🚀 MAGNUS Backend Server');
   console.log('='.repeat(50));
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Port: ${PORT}`);
-  console.log(`Health: http://localhost:${PORT}/health`);
-  console.log(`Webhook: http://localhost:${PORT}/api/webhooks/test`);
-  console.log(`Webhook Secret: ${process.env.WORDPRESS_WEBHOOK_SECRET ? '✓ Configured' : '✗ Missing'}`);
+  console.log('Environment: '+ (process.env.NODE_ENV || 'development'));
+  console.log('Port: '+ PORT);
+  console.log('Health: http://localhost:'+ PORT +'/health');
+  console.log('Webhook: http://localhost:'+ PORT +'/api/webhooks/test');
+  console.log('Devices: http://localhost:'+ PORT +'/api/devices');
+  console.log('Webhook Secret: '+ (process.env.WORDPRESS_WEBHOOK_SECRET ? '✓ Configured' : '✗ Missing'));
   console.log('='.repeat(50));
 });
 
